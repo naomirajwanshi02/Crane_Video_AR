@@ -50,6 +50,10 @@ function placeVideo(){
   setHint();
 }
 
+// Opened from the Scan to Watch hub, the crane picture was already scanned there: go straight to the
+// experience (the intro) and never ask to scan it again. On its own, the page starts with the scan.
+const next = () => (fromHub ? openIntro() : openScan());
+
 // ------------------------------------------------------------ 0 · camera permission
 async function cameraGranted(){
   try { return (await navigator.permissions?.query({ name: 'camera' }))?.state === 'granted'; } catch { return false; }
@@ -57,7 +61,7 @@ async function cameraGranted(){
 async function openPerm(){
   S.phase = 'perm'; syncX();
   overlay('guide', false);
-  if (await cameraGranted()) return openScan();
+  if (await cameraGranted()) return next();
   if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia){
     $('permStatus').textContent = 'This browser cannot use the camera here. Open the page over https in Safari or Chrome.';
     $('permBtn').disabled = true;
@@ -72,7 +76,7 @@ async function askCamera(){
     stream.getTracks().forEach((t) => t.stop());
     $('permStatus').textContent = '';
     show(null);
-    openScan();
+    next();
   } catch (err) {
     console.error(err);
     $('permStatus').textContent = err?.name === 'NotAllowedError'
@@ -122,6 +126,12 @@ function openIntro(){
 async function begin(){
   $('goBtn').disabled = true;
   player.play();
+  // from the hub the scan was skipped: track the picture quietly in the background, so the video
+  // lands on it when it is in view and floats full-screen when it is not
+  if (fromHub && !scanning() && !q.has('preview') && !$('ar').querySelector('video')){
+    try { await scan($('ar'), { video, onStatus: () => {}, onFound, onLost }); }
+    catch (err) { console.warn('background tracking unavailable', err); }
+  }
   // if the camera is not running yet (skipped the picture), ask for it now
   if (!scanning() && !q.has('preview') && !$('ar').querySelector('video')){
     try { await plainCamera($('ar')); }

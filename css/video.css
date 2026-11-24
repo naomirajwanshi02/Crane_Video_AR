@@ -7,7 +7,7 @@
 #hud{justify-content:flex-start;padding:calc(var(--safe-t) + 10px) 12px 0}
 .hud-top{justify-content:space-between;align-items:center;gap:10px;max-width:none}
 .hud-top .hint{flex:1;min-width:0;justify-content:flex-start}
-.hud-top .iconbtn{position:static;flex:none;pointer-events:auto}
+.hud-top .iconbtn{position:static;flex:none;pointer-events:auto;margin-left:auto}
 
 /* ---------- the video: takes most of the screen ---------- */
 .floatvid{position:fixed;z-index:12;left:50%;transform:translateX(-50%);
