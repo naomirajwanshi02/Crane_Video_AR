@@ -1,5 +1,5 @@
 // Paper Crane AR: allow the camera → scan the paper crane picture → a short note →
-// OK plays the folding video right on the picture. Pause, ±10 s and a seek bar sit at the bottom.
+// Start plays the folding video right on the picture. Pause, ±10 s and a seek bar sit at the bottom.
 // If the picture leaves the view, the video floats over the camera so you never lose your place.
 //
 // ?demo=1     skip the picture (camera still on, the video floats)
@@ -17,7 +17,7 @@ const S = { phase: 'perm', inView: false };
 const HUB = 'https://naomirajwanshi02.github.io/Scan_To_Watch/';
 const fromHub = q.has('from');
 const goHub = () => { try { video.pause(); } catch { /* fine */ } stopScan(); location.href = HUB; };
-const syncX = () => { const x = $('hubX'); if (x) x.hidden = !(fromHub && S.phase !== 'watch'); };
+const syncX = () => { const x = $('hubX'); if (x) x.hidden = !(fromHub && S.phase === 'intro'); };
 
 const overlay = (id, on) => $(id).classList.toggle('on', on);
 const show = (id) => document.querySelectorAll('.screen').forEach((s) => s.classList.toggle('on', s.id === id));
@@ -118,7 +118,7 @@ function openIntro(){
   show('intro');
 }
 
-// OK: the tap also unlocks video playback on phones.
+// Start: the tap also unlocks video playback on phones.
 async function begin(){
   $('goBtn').disabled = true;
   player.play();
@@ -140,21 +140,16 @@ async function begin(){
   placeVideo();
 }
 
-function setHint(){
-  const h = $('hint');
-  if (S.phase !== 'watch'){ h.textContent = ''; return; }
-  if (q.has('preview') || $('ar').classList.contains('preview')){ h.textContent = 'Watching without the camera'; h.classList.remove('live'); return; }
-  if (!scanning()){ h.textContent = 'Video floating over the camera'; h.classList.add('live'); return; }
-  h.classList.toggle('live', S.inView);
-  h.textContent = S.inView ? 'On the picture' : 'Picture out of view · video floating';
-}
+// No status cue on top while watching: the video and its controls are all that show.
+function setHint(){ $('hint').textContent = ''; }
 
 // ------------------------------------------------------------ wiring
 $('permBtn').addEventListener('click', askCamera);
 $('scanRetry').addEventListener('click', () => { stopScan(); openScan(); });
 $('scanSkip').addEventListener('click', () => { stopScan(); overlay('guide', false); openIntro(); });
 $('goBtn').addEventListener('click', begin);
-$('closeBtn').addEventListener('click', () => { if (fromHub) return goHub(); player.pause(); overlay('hud', false); openScan(); });
+// The scan screen never comes back once the picture has been found: closing the video returns to the intro panel.
+$('closeBtn').addEventListener('click', () => { if (fromHub) return goHub(); player.pause(); overlay('hud', false); placeVideo(); openIntro(); });
 $('hubX').addEventListener('click', goHub);
 $('errBtn').addEventListener('click', () => { $('err').hidden = true; location.reload(); });
 

@@ -73,15 +73,15 @@
   </div>
 </div>
 
-<button class="iconbtn hubx" id="hubX" aria-label="Back to Scan to Watch" hidden><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></button>
-
 <div id="found" class="overlay"><div class="plate badge"><b>Found it!</b><span>Paper crane</span></div></div>
 
 <!-- ============ 2 · EXPLANATORY NOTE ============ -->
 <section id="intro" class="screen dim">
   <div class="col center">
     <div class="plate welcome">
-      <img class="hero" src="assets/crane-image.png" alt="">
+      <!-- a plain cross inside the panel (shown only when opened from the Scan to Watch hub) -->
+      <button class="panelx" id="hubX" aria-label="Back to Scan to Watch" hidden><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></button>
+      <img class="hero" src="target.png" alt="">
       <h1>You can begin!</h1>
       <p>Watch how to <b>fold a paper crane</b>, step by step, right on top of the picture. Pause whenever you need to fold along.</p>
       <ol class="steps">
@@ -91,7 +91,7 @@
         <li><b>4</b><span><b>10↻</b> to skip ahead</span></li>
       </ol>
       <p class="small">This is an AR experience, so it needs <b>permission to use your camera</b>. The video stays on this phone: nothing is recorded or sent anywhere.</p>
-      <button class="btn red" id="goBtn">OK, play the video</button>
+      <button class="btn red" id="goBtn">Start</button>
       <div class="status dark" id="camStatus"></div>
     </div>
   </div>

@@ -8,22 +8,58 @@
 <div id="out"></div><pre id="log"></pre>
 <script type="module">
 const log = (t) => { document.getElementById('log').textContent += t + '\n'; };
+// Remove the white background: flood-fill the near-white pixels reachable from the border to transparent,
+// and un-mix the anti-aliased edge pixels from white so no pale halo is left around the crane.
+function cutOut(c){
+  const g = c.getContext('2d'), W = c.width, H = c.height;
+  const im = g.getImageData(0, 0, W, H), d = im.data;
+  const white = (i) => Math.min(d[i], d[i + 1], d[i + 2]) >= 238;
+  const gone = new Uint8Array(W * H), stack = [];
+  const push = (x, y) => { const p = y * W + x; if (!gone[p] && white(p * 4)){ gone[p] = 1; stack.push(p); } };
+  for (let x = 0; x < W; x++){ push(x, 0); push(x, H - 1); }
+  for (let y = 0; y < H; y++){ push(0, y); push(W - 1, y); }
+  while (stack.length){
+    const p = stack.pop(), x = p % W, y = (p / W) | 0;
+    if (x > 0) push(x - 1, y); if (x < W - 1) push(x + 1, y); if (y > 0) push(x, y - 1); if (y < H - 1) push(x, y + 1);
+  }
+  const out = new Uint8ClampedArray(d);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){
+    const p = y * W + x, i = p * 4;
+    if (gone[p]){ out[i + 3] = 0; continue; }
+    // pixels within 2 px of the removed area are edge pixels blended with white
+    let edge = false;
+    for (let dy = -2; dy <= 2 && !edge; dy++) for (let dx = -2; dx <= 2; dx++){
+      const xx = x + dx, yy = y + dy;
+      if (xx >= 0 && yy >= 0 && xx < W && yy < H && gone[yy * W + xx]){ edge = true; break; }
+    }
+    if (!edge) continue;
+    const m = Math.min(d[i], d[i + 1], d[i + 2]);
+    const a = Math.min(1, Math.max(0.15, (255 - m) / (255 - 130)));
+    for (let k = 0; k < 3; k++) out[i + k] = Math.min(255, Math.max(0, (d[i + k] - 255 * (1 - a)) / a));
+    out[i + 3] = Math.round(a * 255);
+  }
+  g.putImageData(new ImageData(out, W, H), 0, 0);
+  return c;
+}
 async function build(){
   const src = new Image(); src.src = '../assets/crane-image.png?' + Date.now(); await src.decode();
-  // flatten onto white (the picture is printed on white paper); keep its own shape
   const scale = Math.min(1, 1600 / Math.max(src.naturalWidth, src.naturalHeight));
-  const c = document.createElement('canvas');
-  c.width = Math.round(src.naturalWidth * scale); c.height = Math.round(src.naturalHeight * scale);
-  const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
-  g.imageSmoothingQuality = 'high'; g.drawImage(src, 0, 0, c.width, c.height);
-  const png = await new Promise((ok) => c.toBlob(ok, 'image/png'));
+  const mk = () => { const c = document.createElement('canvas'); c.width = Math.round(src.naturalWidth * scale); c.height = Math.round(src.naturalHeight * scale); return c; };
+  // the compiled target: the picture flattened on white, the way it is printed on paper
+  const flat = mk(); const fg = flat.getContext('2d'); fg.fillStyle = '#fff'; fg.fillRect(0, 0, flat.width, flat.height);
+  fg.imageSmoothingQuality = 'high'; fg.drawImage(src, 0, 0, flat.width, flat.height);
+  // target.png, the picture people print or show: the crane alone, white background removed
+  const cut = mk(); const cg = cut.getContext('2d'); cg.imageSmoothingQuality = 'high'; cg.drawImage(src, 0, 0, cut.width, cut.height);
+  cutOut(cut);
+  const png = await new Promise((ok) => cut.toBlob(ok, 'image/png'));
   let res = await fetch('/__save?name=target.png', { method: 'POST', body: png });
-  log(`target.png ${c.width}×${c.height}: ${res.ok ? 'saved' : 'save failed'}`);
+  log(`target.png ${cut.width}×${cut.height} (transparent): ${res.ok ? 'saved' : 'save failed'}`);
   const shown = new Image(); shown.src = URL.createObjectURL(png); document.getElementById('out').replaceChildren(shown);
+  if (new URLSearchParams(location.search).has('cutout')){ log('DONE (cut-out only)'); return; }
 
   log('loading MindAR compiler…');
   await import('https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js');
-  const img = new Image(); img.src = '../target.png?' + Date.now(); await img.decode();
+  const img = new Image(); img.src = flat.toDataURL('image/png'); await img.decode();
   const compiler = new window.MINDAR.IMAGE.Compiler();
   let last = -10;
   const data = await compiler.compileImageTargets([img], (p) => { if (p - last >= 10){ last = p; log(`compiling ${p.toFixed(0)}%`); } });
@@ -37,6 +73,6 @@ async function build(){
   log('DONE');
 }
 document.getElementById('go').onclick = () => build().catch((e) => log('ERROR ' + (e.stack || e)));
-if (new URLSearchParams(location.search).has('build')) document.getElementById('go').click();
+if (/[?&](build|cutout)/.test(location.search)) document.getElementById("go").click();
 </script>
 </body></html>
