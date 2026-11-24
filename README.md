@@ -1,7 +1,7 @@
 # Paper Crane AR: scan the picture, watch the folding video
 
 Point your phone at the printed crane card ([`target.png`](target.png), the pink crane). When it is recognised, the paper-crane folding video
-([ONLY-CRANE](https://github.com/naomirajwanshi02/ONLY-CRANE)) plays right on the card in AR. Bottom bar: **play / pause**, **back 10 s**,
+(the bundled `assets/crane-video.mp4`) plays right on the card in AR. Bottom bar: **play / pause**, **back 10 s**,
 **forward 10 s** and a seek bar. If the card leaves the view, the video floats over the camera so you keep your place.
 Desktop keys: Space = play/pause, ← / → = ∓10 s.
 
@@ -13,8 +13,8 @@ Desktop keys: Space = play/pause, ← / → = ∓10 s.
 | `index.html`, `js/app.js` | The flow: camera permission → scan → note → watch |
 | `js/scan.js` | MindAR image tracking; draws the `<video>` as a three.js plane glued to the card |
 | `js/player.js` | Play/pause, ±10 s, seek bar (drives the same `<video>`) |
-| `js/data.js` | Video URL (ONLY-CRANE on GitHub Pages) and the bundled fallback |
-| `assets/paper-crane-720.mp4` | Fallback copy of the video (used if the Pages link is unreachable) |
+| `js/data.js` | Where the video comes from (`assets/crane-video.mp4`) |
+| `assets/crane-video.mp4` | The folding video. Replace this file to change the video |
 | `target.png` / `targets.mind` | The printable card and its compiled MindAR target |
 | `tools/make-target.html`, `tools/serve.ps1` | Draw the card + compile the target (`?build=1`); local server with Range support |
 

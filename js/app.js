@@ -25,7 +25,7 @@ const buzz = (ms) => { try { navigator.vibrate?.(ms); } catch { /* no vibration 
 const pop = (el) => { el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); };
 
 // ------------------------------------------------------------ the video
-// Played from the ONLY-CRANE site (always the newest cut); the copy in assets/ is the fallback.
+// Played from the copy bundled in assets/ (?video=<url> overrides it).
 const video = $('vid');
 video.muted = true;               // the guide is silent; muted video may autoplay everywhere
 video.loop = false;
